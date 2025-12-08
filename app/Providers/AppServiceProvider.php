@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Interface\DeviceTokenInterface;
+use App\Repository\DeviceTokenRepository;
+use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\ServiceProvider;
+use NotificationChannels\Fcm\FcmChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(DeviceTokenInterface::class, DeviceTokenRepository::class);
     }
 
     /**
@@ -19,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->app->make(ChannelManager::class)->extend('fcm', function ($app) {
+            return new FcmChannel(
+                $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
+                $app->make(\Kreait\Firebase\Contract\Messaging::class)
+            );
+        });
     }
 }
